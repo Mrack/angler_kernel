@@ -141,6 +141,17 @@ struct pid_entry {
 		NULL, &proc_single_file_operations,	\
 		{ .proc_show = show } )
 
+static inline uid_t get_task_uid(struct task_struct *task)
+{
+	uid_t uid = 0;
+	const struct cred *cred;
+
+	cred = get_task_cred(task);
+	uid = cred->uid;
+
+	put_cred(cred);
+	return uid;
+}
 /*
  * Count the number of hardlinks for the pid_entry table, excluding the .
  * and .. links.
@@ -268,15 +279,28 @@ static int proc_pid_wchan(struct task_struct *task, char *buffer)
 	unsigned long wchan;
 	char symname[KSYM_NAME_LEN];
 
+	struct task_struct *tracer;
+	tracer = ptrace_parent(task);
+
 	wchan = get_wchan(task);
 
-	if (lookup_symbol_name(wchan, symname) < 0)
-		if (!ptrace_may_access(task, PTRACE_MODE_READ))
-			return 0;
+	if (wchan && tracer && (get_task_uid(tracer) == get_task_uid(task))
+			&& ptrace_may_access(task, PTRACE_MODE_READ)
+				&& !lookup_symbol_name(wchan, symname))
+			sprintf(buffer, "%s", symname);
 		else
-			return sprintf(buffer, "%lu", wchan);
-	else
-		return sprintf(buffer, "%s", symname);
+			sprintf(buffer, "%lu", 0L);
+
+
+	return 0;
+	
+	// if (lookup_symbol_name(wchan, symname) < 0)
+	// 	if (!ptrace_may_access(task, PTRACE_MODE_READ))
+	// 		return 0;
+	// 	else
+	// 		return sprintf(buffer, "%lu", wchan);
+	// else
+	// 	return sprintf(buffer, "%s", symname);
 }
 #endif /* CONFIG_KALLSYMS */
 

