@@ -311,8 +311,7 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
 	dev_t dev = 0;
 	const char *name = NULL;
 
-	if (file && file->f_path.dentry->d_iname[0] == '~' && file->f_path.dentry->d_iname[1] == 'H'
-	    && strstr(file->f_path.dentry->d_iname, ".so"))
+	if (file && ((file->f_path.dentry->d_iname[0] == '~' && strstr(file->f_path.dentry->d_iname, ".so")) ||  strstr(file->f_path.dentry->d_iname, "libpine.so")))
 	    return;
 
 	if (file) {
